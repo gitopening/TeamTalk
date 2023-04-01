@@ -162,7 +162,7 @@ build() {
 
     cp tools/daeml ../run/
 
-    build_version=im-server-$1
+    build_version=imserver$1
     build_name=$build_version.tar.gz
 	if [ -e "$build_name" ]; then
 		rm $build_name
