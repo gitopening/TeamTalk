@@ -3,6 +3,21 @@
  *
  *  Created on: 2013-7-5
  *      Author: ziteng@mogujie.com
+ *2023-03-26 00:34:42,552 [INFO  IM] - <BaseSocket.cpp>|<329>|<_AcceptNewSocket>,AcceptNewSocket, socket=12 from 192.168.0.27:39792
+ *2023-03-26 00:34:42,564 [INFO  IM] - <MsgConn.cpp>|<448>|<_HandleLoginRequest>,HandleLoginReq, user_name=test, status=1, client_type=18, client=1.0.0,
+ *2023-03-26 00:34:42,575 [INFO  IM] - <DBServConn.cpp>|<293>|<_HandleValidateResponse>,HandleValidateResp, user_name=test, result=0
+ *2023-03-26 00:34:42,575 [INFO  IM] - <DBServConn.cpp>|<352>|<_HandleValidateResponse>,user_name: test, uid: 1
+ *2023-03-26 00:34:42,600 [INFO  IM] - <MsgConn.cpp>|<876>|<_HandleClientDepartmentRequest>,HandleClientDepartmentRequest, user_id=1, latest_update_time=0.
+ *2023-03-26 00:34:42,606 [INFO  IM] - <MsgConn.cpp>|<829>|<_HandleClientAllUserRequest>,HandleClientAllUserReq, user_id=1, latest_update_time=1679675706.
+ *2023-03-26 00:34:42,606 [INFO  IM] - <DBServConn.cpp>|<676>|<_HandleDepartmentResponse>,HandleDepartmentResponse, user_id=1, latest_update_time=0, dept_cnt=0.
+ *2023-03-26 00:34:42,616 [INFO  IM] - <MsgConn.cpp>|<549>|<_HandleClientRecentContactSessionRequest>,HandleClientRecentContactSessionRequest, user_id=1, latest_update_time=0.
+ *2023-03-26 00:34:42,617 [INFO  IM] - <DBServConn.cpp>|<430>|<_HandleAllUserResponse>,HandleAllUserResponse, userId=1, latest_update_time=1679675706, user_cnt=0
+ *2023-03-26 00:34:42,626 [INFO  IM] - <GroupChat.cpp>|<37>|<HandleClientGroupNormalRequest>,HandleClientGroupNormalRequest, user_id=1.
+ *2023-03-26 00:34:42,627 [INFO  IM] - <DBServConn.cpp>|<407>|<_HandleRecentSessionResponse>,HandleRecentSessionResponse, userId=1, session_cnt=0
+ *2023-03-26 00:34:42,629 [INFO  IM] - <MsgConn.cpp>|<670>|<_HandleClientUnreadMsgCntRequest>,HandleClientUnreadMsgCntReq, from_id=1
+ *2023-03-26 00:34:42,629 [INFO  IM] - <GroupChat.cpp>|<71>|<HandleGroupNormalResponse>,HandleGroupNormalResponse, user_id=1, group_cnt=0.
+ *2023-03-26 00:34:42,641 [INFO  IM] - <DBServConn.cpp>|<589>|<_HandleUnreadMsgCountResponse>,HandleUnreadMsgCntResp, userId=1, total_cnt=0, user_unread_cnt=0.
+ *登陆流程中的服务器日志
  */
 
 #include "MsgConn.h"
@@ -378,6 +393,9 @@ void CMsgConn::HandlePdu(CImPdu* pPdu)
             break;
         case CID_FILE_DEL_OFFLINE_REQ:
             s_file_handler->HandleClientFileDelOfflineReq(this, pPdu);
+            break;
+        case CID_LOGIN_REQ_MODIFY_PWD:
+            _HandleModifyPwdRequest(pPdu);
             break;
         default:
             log("wrong msg, cmd id=%d, user id=%u. ", pPdu->GetCommandId(), GetUserId());
@@ -994,4 +1012,105 @@ void CMsgConn::_HandleQueryPushShieldRequest(CImPdu* pPdu) {
         pPdu->SetPBMsg(&msg);
         pDBConn->SendPdu(pPdu);
     }
+}
+
+/*
+*对以上代码简单的说明下.
+第3行:我们定义了一个ModifyPass的协议类。
+第4行:解析协议，并对协议做检查。
+第6行:获取一个db连接
+第7行:判断连接是否为空
+第8行:把与客户端的链接句柄打包成CDbAttachData。
+第9行:将打包好的CDbAttachData 放到pb协议中.
+第10行:重新将pb协议放到CImPdu协议中。
+第11行:将pdu发送到db_proxy_server中。
+*/
+void CMsgConn::_HandleModifyPwdRequest(CImPdu* pPdu) {
+    IM::Login::IMModifyPasswordReq msg;
+    CHECK_PB_PARSE_MSG(msg.ParseFromArray(pPdu->GetBodyData(), pPdu->GetBodyLength()));
+    log("IMModifyPasswordReq, user_id=%u ", GetUserId());
+    CDBServConn* pDBConn = get_db_serv_conn();
+    if (pDBConn) {
+        msg.set_user_id(GetUserId());
+        CPduAttachData attach(ATTACH_TYPE_HANDLE, m_handle, 0, NULL);
+        msg.set_attach_data(attach.GetBuffer(), attach.GetLength());
+        pPdu->SetPBMsg(&msg);
+        pDBConn->SendPdu(pPdu);
+        //至此，我们的msg_server已经处理了转发的请求了，接下来，我们需要去db_proxy_server中做处理了
+    }
+}
+
+
+//注册账号
+void CMsgConn::_HandleRegisterRequest(CImPdu* pPdu)
+{
+    // refuse second validate request
+    if (m_login_name.length() != 0) {
+        log("duplicate LoginRequest in the same conn ");
+        return;
+    }
+
+    // check if all server connection are OK
+    uint32_t result = 0;
+    string result_string = "";
+    CDBServConn* pDbConn = get_db_serv_conn_for_login();
+    if (!pDbConn) {
+        result = IM::BaseDefine::REFUSE_REASON_NO_DB_SERVER;
+        result_string = "服务端异常";
+	}
+    else if (!is_login_server_available()) {
+        result = IM::BaseDefine::REFUSE_REASON_NO_LOGIN_SERVER;
+        result_string = "服务端异常";
+	}
+    else if (!is_route_server_available()) {
+        result = IM::BaseDefine::REFUSE_REASON_NO_ROUTE_SERVER;
+        result_string = "服务端异常";
+
+    }
+    if (result) {
+        IM::Login::IMLoginRes msg;
+        msg.set_server_time(time(NULL));
+        msg.set_result_code((IM::BaseDefine::ResultType)result);
+        msg.set_result_string(result_string);
+        CImPdu pdu;
+        pdu.SetPBMsg(&msg);
+        pdu.SetServiceId(SID_LOGIN);
+        pdu.SetCommandId(CID_LOGIN_RES_USERLOGIN);
+        pdu.SetSeqNum(pPdu->GetSeqNum());
+        SendPdu(&pdu);
+        Close();
+        return;
+    }
+    IM::Login::IMLoginReq msg;
+    CHECK_PB_PARSE_MSG(msg.ParseFromArray(pPdu->GetBodyData(), pPdu->GetBodyLength()));
+    //假如是汉字，则转成拼音
+    m_login_name = msg.user_name();
+    string password = msg.password();
+    uint32_t online_status = msg.online_status();
+    m_client_version = msg.client_version();
+    m_client_type = msg.client_type();
+    m_online_status = online_status;
+    log("HandleRegisterReq, user_name=%s, client_type=%u, client=%s, ",
+        m_login_name.c_str(), m_client_type, m_client_version.c_str());
+    CImUser* pImUser = CImUserManager::GetInstance()->GetImUserByLoginName(GetLoginName());
+    if (!pImUser) {
+        pImUser = new CImUser(GetLoginName());
+        CImUserManager::GetInstance()->AddImUserByLoginName(GetLoginName(), pImUser);
+    }
+    pImUser->AddUnValidateMsgConn(this);
+
+    CDbAttachData attach_data(ATTACH_TYPE_HANDLE, m_handle, 0);
+    // continue to validate if the user is OK
+
+    IM::Server::IMValidateReq msg2;
+    msg2.set_user_name(msg.user_name());
+    msg2.set_password(password);
+    msg2.set_attach_data(attach_data.GetBuffer(), attach_data.GetLength());
+    CImPdu pdu;
+    pdu.SetPBMsg(&msg2);
+    pdu.SetServiceId(SID_OTHER);
+    pdu.SetCommandId(CID_OTHER_VALIDATE_REQ);
+    pdu.SetSeqNum(pPdu->GetSeqNum());
+    pDbConn->SendPdu(&pdu);
+
 }
