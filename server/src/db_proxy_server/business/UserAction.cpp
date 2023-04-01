@@ -224,39 +224,39 @@ msgResp.set_user_id(from_user_id);
     }
 
     //注册账号
-    void registerUser(CImPdu* pPdu, uint32_t conn_uuid) {
-        IM::Buddy::IMChangeSignInfoReq req;
-        IM::Buddy::IMChangeSignInfoRsp resp;
-        if (req.ParseFromArray(pPdu->GetBodyData(), pPdu->GetBodyLength())) {
-            uint32_t user_id = req.user_id();
-            const string& sign_info = req.sign_info();
+    // void registerUser(CImPdu* pPdu, uint32_t conn_uuid) {
+    //     IM::Buddy::IMChangeSignInfoReq req;
+    //     IM::Buddy::IMChangeSignInfoRsp resp;
+    //     if (req.ParseFromArray(pPdu->GetBodyData(), pPdu->GetBodyLength())) {
+    //         uint32_t user_id = req.user_id();
+    //         const string& sign_info = req.sign_info();
 
-            //bool result = CUserModel::getInstance()->insertUser(user_id, sign_info);
-            bool result = CUserModel::getInstance()->insertUser(user_id, sign_info);
+    //         //bool result = CUserModel::getInstance()->insertUser(user_id, sign_info);
+    //         bool result = CUserModel::getInstance()->insertUser(user_id, sign_info);
 
-            resp.set_user_id(user_id);
-            resp.set_result_code(result ? 0 : 1);
-            if (result) {
-                resp.set_sign_info(sign_info);
-                log("changeUserSignInfo sucess, user_id=%u, sign_info=%s", user_id, sign_info.c_str());
-            }
-            else {
-                log("changeUserSignInfo false, user_id=%u, sign_info=%s", user_id, sign_info.c_str());
-            }
+    //         resp.set_user_id(user_id);
+    //         resp.set_result_code(result ? 0 : 1);
+    //         if (result) {
+    //             resp.set_sign_info(sign_info);
+    //             log("changeUserSignInfo sucess, user_id=%u, sign_info=%s", user_id, sign_info.c_str());
+    //         }
+    //         else {
+    //             log("changeUserSignInfo false, user_id=%u, sign_info=%s", user_id, sign_info.c_str());
+    //         }
 
 
 
-        }
-        else {
-            log("changeUserSignInfo: IMChangeSignInfoReq ParseFromArray failed!!!");
-        }
-    }
+    //     }
+    //     else {
+    //         log("changeUserSignInfo: IMChangeSignInfoReq ParseFromArray failed!!!");
+    //     }
+    // }
 
-   
+
     void modifyUserPwd(CImPdu* pPdu, uint32_t conn_uuid)
     {
         IM::Login::IMModifyPasswordReq msg;
-        IM::Login::IMModifyPasswordRsp msgResp; 
+        IM::Login::IMModifyPasswordRsp msgResp;
         if (msg.ParseFromArray(pPdu->GetBodyData(), pPdu->GetBodyLength()))
         {
             CImPdu* pPduRes = new CImPdu;
@@ -266,17 +266,17 @@ msgResp.set_user_id(from_user_id);
             string strNewPass = msg.new_pwd();
             string strUserName = msg.user_name();
 
-          
+
             uint32_t nRet = CUserModel::getInstance()->modifyUserPwd(nUserId, strOldPass, strNewPass);
 
             log("modifyUserPass. userId=%u, result=%d.", nUserId, nRet);
             msgResp.set_user_id(nUserId);
-            msgResp.set_status(nRet);
+            // msgResp.set_status(nRet);
             msgResp.set_attach_data(msg.attach_data());
             pPduRes->SetPBMsg(&msgResp);
             pPduRes->SetSeqNum(pPdu->GetSeqNum());
             pPduRes->SetServiceId(IM::BaseDefine::SID_LOGIN);
-            pPduRes->SetCommandId(IM::BaseDefine::CID_LOGIN_RES_MODIFY_PASS);
+            pPduRes->SetCommandId(IM::BaseDefine::CID_LOGIN_RES_MODIFY_PWD);
             CProxyConn::AddResponsePdu(conn_uuid, pPduRes);
         }
         else

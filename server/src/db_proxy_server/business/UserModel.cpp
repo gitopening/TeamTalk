@@ -436,57 +436,57 @@ bool CUserModel::getPushShield(uint32_t user_id, uint32_t* shield_status) {
 }
 
 
-bool CUserModel::insertUser(string& strUserName, string& strPassword)
-{
-    bool bRet = false;
-    uint32_t nUserId = INVALID_VALUE;
-    CDBManager* pDBManager = CDBManager::getInstance();
-    CDBConn* pDBConn = pDBManager->GetDBConn("teamtalk_master");
-    if (pDBConn)
-    {
-        string strSql = "insert into IMUser(`sex`,`nick`,`domain`,`name`,`phone`,`email`,`salt`,`sign_info`,`departId`,`status`,`created`,`updated`,`push_shield_status`) values(?,?,?,?,?,?,?,?,?,?,?,?)";
-        CPrepareStatement* stmt = new CPrepareStatement();
-        if (stmt->Init(pDBConn->GetMysql(), strSql))
-        {
-            uint32_t nNow = (uint32_t)time(NULL);
-            uint32_t index = 0;
-            uint32_t nGender = cUser.nSex;
-            uint32_t nStatus = cUser.nStatus;
-           // stmt->SetParam(index++, cUser.nId);
-            stmt->SetParam(index++, nGender);
-            stmt->SetParam(index++, strUserName);
-            stmt->SetParam(index++, strUserName);
-            stmt->SetParam(index++, strUserName);
-            stmt->SetParam(index++, 18812345678);
-            stmt->SetParam(index++, "test@test.com");
-           // stmt->SetParam(index++, cUser.strAvatar);
+// bool CUserModel::insertUser(string& strUserName, string& strPassword)
+// {
+//     bool bRet = false;
+//     uint32_t nUserId = INVALID_VALUE;
+//     CDBManager* pDBManager = CDBManager::getInstance();
+//     CDBConn* pDBConn = pDBManager->GetDBConn("teamtalk_master");
+//     if (pDBConn)
+//     {
+//         string strSql = "insert into IMUser(`sex`,`nick`,`domain`,`name`,`phone`,`email`,`salt`,`sign_info`,`departId`,`status`,`created`,`updated`,`push_shield_status`) values(?,?,?,?,?,?,?,?,?,?,?,?)";
+//         CPrepareStatement* stmt = new CPrepareStatement();
+//         if (stmt->Init(pDBConn->GetMysql(), strSql))
+//         {
+//             uint32_t nNow = (uint32_t)time(NULL);
+//             uint32_t index = 0;
+//             uint32_t nGender = cUser.nSex;
+//             uint32_t nStatus = cUser.nStatus;
+//           // stmt->SetParam(index++, cUser.nId);
+//             stmt->SetParam(index++, nGender);
+//             stmt->SetParam(index++, strUserName);
+//             stmt->SetParam(index++, strUserName);
+//             stmt->SetParam(index++, strUserName);
+//             stmt->SetParam(index++, 18812345678);
+//             stmt->SetParam(index++, "test@test.com");
+//           // stmt->SetParam(index++, cUser.strAvatar);
 
-            stmt->SetParam(index++, strUserName);
-            stmt->SetParam(index++, 1);
-            stmt->SetParam(index++, 0);
-            stmt->SetParam(index++, nNow);
-            stmt->SetParam(index++, nNow);
-            stmt->SetParam(index++, 0);
-            bRet = stmt->ExecuteUpdate();
+//             stmt->SetParam(index++, strUserName);
+//             stmt->SetParam(index++, 1);
+//             stmt->SetParam(index++, 0);
+//             stmt->SetParam(index++, nNow);
+//             stmt->SetParam(index++, nNow);
+//             stmt->SetParam(index++, 0);
+//             bRet = stmt->ExecuteUpdate();
 
-            if (!bRet)
-            {
-                log("insert user failed: %s", strSql.c_str());
-            }else{
-                nUserId = stmt->GetInsertId();
+//             if (!bRet)
+//             {
+//                 log("insert user failed: %s", strSql.c_str());
+//             }else{
+//                 nUserId = stmt->GetInsertId();
 
-            }
-           
-        }
-        delete stmt;
-        pDBManager->RelDBConn(pDBConn);
-    }
-    else
-    {
-        log("no db connection for teamtalk_master");
-    }
-    return bRet;
-}
+//             }
+
+//         }
+//         delete stmt;
+//         pDBManager->RelDBConn(pDBConn);
+//     }
+//     else
+//     {
+//         log("no db connection for teamtalk_master");
+//     }
+//     return bRet;
+// }
 
 //我们已经实现了修改密码的逻辑。函数中用到了md5计算&#xff0c;所以&#xff0c;我们需要包含EncDec.h头文件
 //网络请求中 密码用的明文 不过是pb协议

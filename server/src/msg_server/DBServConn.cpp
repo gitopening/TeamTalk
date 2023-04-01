@@ -922,10 +922,11 @@ void CDBServConn::_HandleModifyPwdResponse(CImPdu* pPdu)
     IM::Login::IMModifyPasswordRsp msg;
     CHECK_PB_PARSE_MSG(msg.ParseFromArray(pPdu->GetBodyData(), pPdu->GetBodyLength()));
     uint32_t user_id = msg.user_id();
-    uint32_t status = msg.status();
+    //uint32_t status = msg.status();
     CDbAttachData attach_data((uchar_t*)msg.attach_data().c_str(), msg.attach_data().length());
     uint32_t handle = attach_data.GetHandle();
-    log("_HandleModifyPwdResponse, user_id=%u, status=%u.", user_id, status);
+   // log("_HandleModifyPwdResponse, user_id=%u, status=%u.", user_id, status);
+    log("_HandleModifyPwdResponse, user_id=%u, status", user_id);
 
     CMsgConn* pMsgConn = CImUserManager::GetInstance()->GetMsgConnByHandle(user_id, handle);
     if (pMsgConn) {
