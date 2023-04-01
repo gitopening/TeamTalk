@@ -65,3 +65,56 @@ Untracked files:
 no changes added to commit (use "git add" and/or "git commit -a")
 [root@cbig pb]#
 执行命令完了之后 发生的变化
+
+正常运行的 编译后的服务器配置文件 只需要修改这两个  loginserver_ok.conf msgserver_ok.conf
+开放 HttpPort=18080 这个端口和 msgserver_ok.conf总的ListenPort=18000 端口
+ClientListenIP=0.0.0.0		# can use multiple ip, seperate by ';'
+ClientPort=18008
+HttpListenIP=0.0.0.0
+HttpPort=18080
+MsgServerListenIP=0.0.0.0 	# can use multiple ip, seperate by ';'
+MsgServerPort=18100
+
+msfs=http://192.168.0.37:18700/
+
+discovery=http://192.168.0.37/api/discovery
+
+
+msgserver_ok.conf
+
+ListenIP=0.0.0.0
+ListenPort=18000
+
+ConcurrentDBConnCnt=1
+DBServerIP1=127.0.0.1
+DBServerPort1=10600
+#2023-03-07 23:54:49,071 [INFO  IM] - <msg_server.cpp>|<49>|<main>,MsgServer max files can open: 1024
+#2023-03-07 23:54:49,071 [INFO  IM] - <msg_server.cpp>|<87>|<main>,DBServerIP need 2 instance at lest
+#msg_server这个服务起不来 怀疑这套代码有人修改过，必须要两个服务器
+DBServerIP2=127.0.0.1
+DBServerPort2=10600
+
+LoginServerIP1=localhost
+LoginServerPort1=18100
+#LoginServerIP2=localhost
+#LoginServerPort2=18101
+
+RouteServerIP1=localhost
+RouteServerPort1=18200
+#RouteServerIP2=localhost
+#RouteServerPort2=18201
+
+PushServerIP1=localhost
+PushServerPort1=18500
+
+FileServerIP1=localhost
+FileServerPort1=18600
+#FileServerIP2=localhost
+#FileServerPort2=18601
+
+IpAddr1=192.168.0.37	#电信IP
+IpAddr2=192.168.0.37	#网通IP
+MaxConnCnt=100000
+
+# AES key
+aesKey=12345678901234567890123456789012

@@ -33,8 +33,8 @@ enum LoginCmdID{
     CID_LOGIN_RES_PUSH_SHIELD       = 0x010d; 	//
     CID_LOGIN_REQ_QUERY_PUSH_SHIELD = 0x010e; 	//
     CID_LOGIN_RES_QUERY_PUSH_SHIELD = 0x010f; 
-    CID_LOGIN_REQ_MODIFY_PWD = 0x0110; 	//修改密码
-    CID_LOGIN_RES_MODIFY_PWD = 0x0111;
+    CID_LOGIN_REQ_MODIFY_PWD = 0x0115; 	//修改密码
+    CID_LOGIN_RES_MODIFY_PWD = 0x0116;
 }
 
 // command id for buddy list
