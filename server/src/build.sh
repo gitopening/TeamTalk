@@ -162,7 +162,7 @@ build() {
 
     cp tools/daeml ../run/
 
-    build_version=im-server-$1
+    build_version=imserver$1
     build_name=$build_version.tar.gz
 	if [ -e "$build_name" ]; then
 		rm $build_name
@@ -201,6 +201,7 @@ build() {
 
     cp msfs/msfs ../$build_version/msfs/
     cp msfs/msfs.conf.example ../$build_version/msfs/
+    cp msfs/msfs.conf ../$build_version/msfs/
 
     cp slog/log4cxx.properties ../$build_version/lib/
     cp slog/libslog.so  ../$build_version/lib/
